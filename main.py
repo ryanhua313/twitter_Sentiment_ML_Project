@@ -46,10 +46,9 @@ def process(data):
     return data
 
 
-def feature_extract(data):
+def vocabulary(data):
     # array of tweets and labels
     tweets = np.array(data['tweet'])
-    labels = np.array(data['label'])
 
     # Turn list of tweets into single list of words
     tweet_words = []
@@ -57,25 +56,28 @@ def feature_extract(data):
         for word in tweet:
             tweet_words.append(word)
     # Set of unique words
-    vocabulary = set(tweet_words)
+    vocab = set(tweet_words)
+    return vocab
 
-    vectors = np.zeros((len(tweets), len(vocabulary)))
+
+def feature_extract(data, vocab):
+    tweets = np.array(data['tweet'])
+    labels = np.array(data['label'])
+    vectors = np.zeros((len(tweets), len(vocab)))
     for i, tweet in enumerate(tweets):
-        for j, word in enumerate(vocabulary):
+        for j, word in enumerate(vocab):
             vectors[i, j] = tweet.count(word)
-    return vectors, labels, vocabulary
+    return vectors, labels
 
 
-def log_train(data, labels, learning_rate, num_iter):
+def log_train(new_data, labels, learning_rate, num_iter, vocab):
     # Initialize the parameters
-    new_data, labels, vocabulary = feature_extract(data)
-    num_features = len(vocabulary)
+    num_features = len(vocab)
     w = np.zeros(num_features)
     b = 0
 
     # Define the cost function
     m = new_data.shape[0]
-
 
     # Implement gradient descent
     for i in range(num_iter):
@@ -95,14 +97,13 @@ def log_train(data, labels, learning_rate, num_iter):
 
 
 def log_predict(data, weights, b):
-    """Make predictions using a logistic regression model"""
     z = np.dot(data, weights) + b
     return 1 / (1 + np.exp(-z))
 
 
-def test_log_accuracy(data, labels, weights, b):
+def test_log_accuracy(data, labels, weights, b, vocab):
     predict = []
-    new_data, new_l, vocab = feature_extract(data)
+    new_data, new_l = feature_extract(data, vocab)
     new_labels = log_predict(new_data, weights, b)
     for label in new_labels:
         if label > 0.5:
@@ -115,6 +116,11 @@ def test_log_accuracy(data, labels, weights, b):
     return acc
 
 
-J, w, b = log_train(process(train_data), train_data['label'], 0.01, 2000)
-accuracy = test_log_accuracy(process(test_data), test_data['label'], w, b)
+train_processed = process(train_data)
+train_vocab = vocabulary(train_processed)
+new_train_data, labels = feature_extract(train_processed, train_vocab)
+J, w, b = log_train(new_train_data, train_data['label'], 0.01, 2000, train_vocab)
+
+
+accuracy = test_log_accuracy(process(test_data), test_data['label'], w, b, train_vocab)
 print(accuracy)
