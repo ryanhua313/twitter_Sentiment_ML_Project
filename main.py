@@ -119,7 +119,7 @@ def test_log_accuracy(data, labels, weights, b, vocab):
 train_processed = process(train_data)
 train_vocab = vocabulary(train_processed)
 new_train_data, labels = feature_extract(train_processed, train_vocab)
-J, w, b = log_train(new_train_data, train_data['label'], 0.01, 2000, train_vocab)
+J, w, b = log_train(new_train_data, train_data['label'], 0.01, 1000, train_vocab)
 
 
 accuracy = test_log_accuracy(process(test_data), test_data['label'], w, b, train_vocab)
